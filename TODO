@@ -1,0 +1,61 @@
+1) Arithmetic functions for rationals:
+
+the following "dunder" methods must be implemented on both rat and rat.FactorisedInt:
+
+all variants of all binary arithmetic operations:
+
+add[, radd, iadd]
+sub
+mul
+floordiv
+div
+truediv
+mod       - raise an ValueError if not an integer.
+divmod    /
+pow       - raise an ValueError if argument is not an integer.
+lshift
+rshift
+
+and unary ones:
+
+pos
+neg
+abs
+invert    - should return the inverse of the rational, with the numerator and denominator swapped.
+round     - returns another rational to the required precision.
+floor
+ceil
+trunc
+
+(and, or and xor will be excluded.)
+
+comparisons:
+
+lt
+le
+gt
+ge
+eq
+ne
+
+(do not implement cmp, as the numerical values cannot necessarily be represented in normal python datatypes.)
+
+type conversions and unitary tests:
+
+int
+(long - same as int)
+float
+complex
+oct     - raise an ValueError if not an integer.
+hex     - raise an ValueError if not an integer.
+index   - raise an IndexError if not an integer.
+coerce
+
+representations:
+str     - double precision floating point style representation, or integer if exact.
+repr    - 'rat(numerator, denominator)'. not optimised to also store the prime factors, but could be later.
+format  - allows arbitrary precision representation in any base.
+hash    - raise an ValueError if not an integer.
+nonzero
+
+2) irrationals.
