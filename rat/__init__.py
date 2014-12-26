@@ -126,7 +126,7 @@ class rat(object):
                     if c > 0:
                         numerator_factors[f] = c
                     elif c < 0:
-                        denominator_factors[f] = c
+                        denominator_factors[f] = abs(c)
 
                 if denominator_factors:
                     return rat.from_factors(self.value, numerator_factors, other.value, denominator_factors)
