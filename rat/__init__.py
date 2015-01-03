@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 
 class rat(object):
-    """A type, like int(), float() and complex(), to represent rational numbers (fractions) exactly."""
+    """A type, like int(), float() and complex(), to represent rational numbers (fractions of ints) exactly."""
 
     class FactorisedInt(object):
         """An internal type for storing a number retaining both its value and a representation as prime factors."""
@@ -10,7 +10,8 @@ class rat(object):
         def __init__(self, val=0, factors=None):
             """val can be any integer, or left out if 0 is desired."""
             if factors:
-                self.factors = factors
+                # always copy the dictionary into a new object.
+                self.factors = {k:v for k,v in factors.items()}
             elif val:
                 self.factors = rat.FactorisedInt.factorise(abs(val))
             else:
@@ -63,6 +64,22 @@ class rat(object):
 
             return rat.FactorisedInt(self.value + n)
 
+        # addition is commutative
+        __radd__ = __add__
+
+        def __iadd__(self, other):
+            if isinstance(other, rat.FactorisedInt):
+                self.value += other.value
+            else:
+                n = int(other)
+                if n != other:
+                    print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+
+                self.value += n
+            self.factors = rat.FactorisedInt.factorise(abs(self.value))
+
+            return self
+
         def __sub__(self, other):
             if isinstance(other, rat.FactorisedInt):
                 return rat.FactorisedInt(self.value - other.value)
@@ -71,6 +88,28 @@ class rat(object):
                 print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
 
             return rat.FactorisedInt(self.value - n)
+
+        def __rsub__(self, other):
+            if isinstance(other, rat.FactorisedInt):
+                return rat.FactorisedInt(other.value - self.value)
+            n = int(other)
+            if n != other:
+                print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+
+            return rat.FactorisedInt(n - self.value)
+
+        def __isub__(self, other):
+            if isinstance(other, rat.FactorisedInt):
+                self.value -= other.value
+            else:
+                n = int(other)
+                if n != other:
+                    print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+
+                self.value -= n
+            self.factors = rat.FactorisedInt.factorise(abs(self.value))
+
+            return self
 
         def __mul__(self, other):
             if isinstance(other, rat.FactorisedInt):
@@ -102,6 +141,28 @@ class rat(object):
                 print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
 
             return rat.FactorisedInt(self.value * n)
+
+        # multiplication is commutative.
+        __rmul__ = __mul__
+
+        def __imul__(self, other):
+            if not isinstance(other, rat.FactorisedInt):
+                n = int(other)
+                if n != other:
+                    print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+
+                other = rat.FactorisedInt(n)
+
+            for key, value in other.factors.items():
+                try:
+                    self.factors[key] += value
+                except KeyError:
+                    self.factors[key] = value
+
+            self.value *= other.value
+
+            return self
+
 
         def __div__(self, other):
             if isinstance(other, rat.FactorisedInt):
@@ -144,6 +205,93 @@ class rat(object):
 
             return rat.FactorisedInt(q)
 
+        # the whole point of rational types, is that the classic division/true division chasm is gone.
+        __truediv__ = __div__
+
+        def __rdiv__(self, other):
+            if isinstance(other, rat.FactorisedInt):
+                these_fs = set(self.factors.keys())
+                other_fs = set(other.factors.keys())
+
+                all_fs = these_fs.union(other_fs)
+                numerator_factors = {}
+                denominator_factors = {}
+
+                for f in all_fs:
+                    c = 0
+                    try:
+                        c -= self.factors[f]
+                    except KeyError:
+                        pass
+                    try:
+                        c += other.factors[f]
+                    except KeyError:
+                        pass
+
+                    if c > 0:
+                        numerator_factors[f] = c
+                    elif c < 0:
+                        denominator_factors[f] = abs(c)
+
+                if denominator_factors:
+                    return rat.from_factors(self.value, numerator_factors, other.value, denominator_factors)
+                else:
+                    return rat.FactorisedInt(other.value // self.value, numerator_factors)
+
+            n = int(other)
+            if n != other:
+                print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+
+            q, r = divmod(n, self.value)
+
+            if r:
+                return rat(n, self.value)
+
+            return rat.FactorisedInt(q)
+
+        __rtruediv__ = __rdiv__
+
+        def __idiv__(self, other):
+
+            if not isinstance(other, rat.FactorisedInt):
+                n = int(other)
+                if n != other:
+                    print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+
+                other = rat.FactorisedInt(n)
+
+            these_fs = set(self.factors.keys())
+            other_fs = set(other.factors.keys())
+
+            all_fs = these_fs.union(other_fs)
+            numerator_factors = {}
+            denominator_factors = {}
+
+            for f in all_fs:
+                c = 0
+                try:
+                    c += self.factors[f]
+                except KeyError:
+                    pass
+                try:
+                    c -= other.factors[f]
+                except KeyError:
+                    pass
+
+                if c > 0:
+                    numerator_factors[f] = c
+                elif c < 0:
+                    denominator_factors[f] = abs(c)
+
+            if denominator_factors:
+                return rat.from_factors(self.value, numerator_factors, other.value, denominator_factors)
+            else:
+                self.value //= other.value
+                self.factors = numerator_factors
+                return self
+
+        __itruediv__ = __idiv__
+
     def __init__(self, *args):
         """rat(numerator, denominator=0), where arguments should be integers for best results (will continue but
         print warnings if floats are passed, and they will be approximated.)"""
@@ -170,8 +318,12 @@ class rat(object):
     def __repr__(self):
         return 'rat(' + repr(self._numerator.value) + ', ' + repr(self._denominator.value) + ')'
 
+    def __str__(self):
+        # TODO call a arbitrary precision __format__ method with default values for a double with all its bits.
+        return repr(self._numerator.value / self._denominator.value)
+
     def _simplify(self):
-        if self._numerator.value < 0 and self._denominator.value < 0:
+        if self._denominator.value < 0:
             self._numerator.value *= -1
             self._denominator.value *= -1
 
@@ -216,3 +368,18 @@ class rat(object):
                     del dfs[f]
                     self._denominator.value //= f**c
 
+    def __add__(self, v):
+        if not isinstance(v, rat):
+            # assume it is an integer (FactorisedInt will print a warning if it's a float.)
+            new_numerator = self._numerator + v * self._denominator
+            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
+                             self._denominator.factors)
+
+        # if not an integer, then we must find the common denominator:
+        # TODO
+
+    def __radd__(self, other):
+        pass
+
+    def __iadd__(self, other):
+        pass
