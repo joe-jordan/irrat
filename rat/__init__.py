@@ -28,7 +28,7 @@ class rat(object):
         def factorise(cls, v):
             n = int(v)
             if v != n:
-                print("Warning, inexact value", n, "computed from input value", v, "in rationals library.")
+                print("Warning, inexact value", n, "computed from input value", repr(v), "in rationals library.")
 
             factors = {}
 
@@ -55,12 +55,20 @@ class rat(object):
                     break
             return factors
 
+        @classmethod
+        def from_factors(cls, factors):
+            value = 1
+            for f,e in factors.items():
+                value *= f**e
+
+            return rat.FactorisedInt(value, factors)
+
         def __add__(self, other):
             if isinstance(other, rat.FactorisedInt):
                 return rat.FactorisedInt(self.value + other.value)
             n = int(other)
             if n != other:
-                print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+                print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
 
             return rat.FactorisedInt(self.value + n)
 
@@ -73,7 +81,7 @@ class rat(object):
             else:
                 n = int(other)
                 if n != other:
-                    print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+                    print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
 
                 self.value += n
             self.factors = rat.FactorisedInt.factorise(abs(self.value))
@@ -85,7 +93,7 @@ class rat(object):
                 return rat.FactorisedInt(self.value - other.value)
             n = int(other)
             if n != other:
-                print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+                print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
 
             return rat.FactorisedInt(self.value - n)
 
@@ -94,7 +102,7 @@ class rat(object):
                 return rat.FactorisedInt(other.value - self.value)
             n = int(other)
             if n != other:
-                print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+                print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
 
             return rat.FactorisedInt(n - self.value)
 
@@ -104,7 +112,7 @@ class rat(object):
             else:
                 n = int(other)
                 if n != other:
-                    print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+                    print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
 
                 self.value -= n
             self.factors = rat.FactorisedInt.factorise(abs(self.value))
@@ -138,7 +146,7 @@ class rat(object):
 
             n = int(other)
             if n != other:
-                print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+                print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
 
             return rat.FactorisedInt(self.value * n)
 
@@ -149,7 +157,7 @@ class rat(object):
             if not isinstance(other, rat.FactorisedInt):
                 n = int(other)
                 if n != other:
-                    print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+                    print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
 
                 other = rat.FactorisedInt(n)
 
@@ -196,7 +204,7 @@ class rat(object):
 
             n = int(other)
             if n != other:
-                print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+                print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
 
             q, r = divmod(self.value, n)
 
@@ -240,7 +248,7 @@ class rat(object):
 
             n = int(other)
             if n != other:
-                print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+                print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
 
             q, r = divmod(n, self.value)
 
@@ -256,7 +264,7 @@ class rat(object):
             if not isinstance(other, rat.FactorisedInt):
                 n = int(other)
                 if n != other:
-                    print("Warning, inexact value", n, "computed from input value", other, "in rationals library.")
+                    print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
 
                 other = rat.FactorisedInt(n)
 
@@ -291,6 +299,49 @@ class rat(object):
                 return self
 
         __itruediv__ = __idiv__
+
+        def __pow__(self, e):
+            copy = rat.FactorisedInt(self.value, self.factors)
+
+            if isinstance(e, rat.FactorisedInt):
+                e_as_int = e.value
+            else:
+                e_as_int = int(e)
+                if e_as_int != e:
+                    print("Warning, inexact value", e_as_int, "computed from input value", repr(e), "in rationals library.")
+
+            copy.value **= e_as_int
+            for f in copy.factors.keys():
+                copy.factors[f] *= e_as_int
+
+            return copy
+
+        def __rpow__(self, b):
+            # do not modify the original object:
+            if not isinstance(b, rat.FactorisedInt):
+                b = rat.FactorisedInt(b)
+            else:
+                b = rat.FactorisedInt(b.value, b.factors)
+
+            b.value **= self.value
+            for f in b.factors.keys():
+                b.factors[f] *= self.value
+
+            return b
+
+        def __ipow__(self, e):
+            if isinstance(e, rat.FactorisedInt):
+                e_as_int = e.value
+            else:
+                e_as_int = int(e)
+                if e_as_int != e:
+                    print("Warning, inexact value", e_as_int, "computed from input value", repr(e), "in rationals library.")
+
+            self.value **= e_as_int
+            for f in self.factors.keys():
+                self.factors[f] *= e_as_int
+
+            return self
 
     def __init__(self, *args):
         """rat(numerator, denominator=0), where arguments should be integers for best results (will continue but
@@ -368,18 +419,93 @@ class rat(object):
                     del dfs[f]
                     self._denominator.value //= f**c
 
-    def __add__(self, v):
-        if not isinstance(v, rat):
+    def __add__(self, other):
+        if not isinstance(other, rat):
             # assume it is an integer (FactorisedInt will print a warning if it's a float.)
-            new_numerator = self._numerator + v * self._denominator
+            new_numerator = self._numerator + other * self._denominator
             return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
-                             self._denominator.factors)
+                                    self._denominator.factors)
 
-        # if not an integer, then we must find the common denominator:
-        # TODO
+        # (denominators are always +ve))
+        if self._denominator.value == other._denominator.value:
+            new_numerator =  self._numerator + other._numerator
+            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
+                                    self._denominator.factors)
 
-    def __radd__(self, other):
-        pass
+
+        # if not an integer, or the same denominator, then we must find the lowest common denominator:
+        ofs = other._denominator.factors
+        sfs = self._denominator.factors
+
+        common_factors = set(ofs.keys()).union(set(sfs.keys()))
+
+        # lowest common denominator
+        lcd = {}
+
+        # what to multiply the numerators by to convert the fractions to lcd. allow negatives until later.
+        mul_self = {}
+
+        for f in common_factors:
+            lcd[f] = max([sfs[f], ofs[f]])
+            mul_self[f] = ofs[f] - sfs[f]
+
+        lcd = {f:e for f,e in lcd.items() if e != 0}
+
+        mul_other = {f:abs(e) for f,e in mul_self.items() if e < 0}
+        mul_self = {f:e for f,e in mul_self.items() if e > 0}
+
+        # all that remains is to capture the values that these sets of factors represent, and build the rational.
+        lcd = rat.FactorisedInt.from_factors(lcd)
+        mul_other = rat.FactorisedInt.from_factors(mul_other)
+        mul_self = rat.FactorisedInt.from_factors(mul_self)
+
+        new_numerator = self._numerator * mul_self + other._numerator * mul_other
+        return rat.from_factors(new_numerator.value, new_numerator.factors, lcd.value, lcd.factors)
+
+    # addition is commutative
+    __radd__ = __add__
 
     def __iadd__(self, other):
-        pass
+        if not isinstance(other, rat):
+            # assume it is an integer (FactorisedInt will print a warning if it's a float.)
+            self._numerator += other * self._denominator
+            self._simplify()
+            return self
+
+        # (denominators are always +ve))
+        if self._denominator.value == other._denominator.value:
+            self._numerator += other._numerator
+            self._simplify()
+            return self
+
+        # if not an integer, or the same denominator, then we must find the lowest common denominator:
+        ofs = other._denominator.factors
+        sfs = self._denominator.factors
+
+        common_factors = set(ofs.keys()).union(set(sfs.keys()))
+
+        # lowest common denominator
+        lcd = {}
+
+        # what to multiply the numerators by to convert the fractions to lcd. allow negatives until later.
+        mul_self = {}
+
+        for f in common_factors:
+            lcd[f] = max([sfs[f], ofs[f]])
+            mul_self[f] = ofs[f] - sfs[f]
+
+        lcd = {f:e for f,e in lcd.items() if e != 0}
+
+        mul_other = {f:abs(e) for f,e in mul_self.items() if e < 0}
+        mul_self = {f:e for f,e in mul_self.items() if e > 0}
+
+        # all that remains is to capture the values that these sets of factors represent, and build the rational.
+        lcd = rat.FactorisedInt.from_factors(lcd)
+        mul_other = rat.FactorisedInt.from_factors(mul_other)
+        mul_self = rat.FactorisedInt.from_factors(mul_self)
+
+        self._numerator *= mul_self
+        self._numerator += other._numerator * mul_other
+        self._denominator = lcd
+        self._simplify()
+        return self
