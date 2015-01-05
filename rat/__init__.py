@@ -16,13 +16,15 @@ class rat(object):
                 self.factors = rat.FactorisedInt.factorise(abs(val))
             else:
                 self.factors = {}
-                val = 0
 
             # _value stores the sign of the number, as well as a cached form of the product of the factors.
             self.value = val
 
         def __repr__(self):
             return 'rat._FactorisedInt(' + repr(self.value) + ', ' + repr(self.factors) + ')'
+
+        def copy(self):
+            return rat.FactorisedInt(self.value, self.factors)
 
         @classmethod
         def factorise(cls, v):
@@ -317,6 +319,12 @@ class rat(object):
             return copy
 
         def __rpow__(self, b):
+            if self.value < 0:
+                raise NotImplementedError("Should return an irrational, not implemented yet.")
+            elif self.value == 0:
+                # anything to the power 0 is 1.
+                return rat.FactorisedInt(1)
+
             # do not modify the original object:
             if not isinstance(b, rat.FactorisedInt):
                 b = rat.FactorisedInt(b)
@@ -363,6 +371,14 @@ class rat(object):
         i = rat()
         i._numerator = rat.FactorisedInt(num, num_factors)
         i._denominator = rat.FactorisedInt(denom, denom_factors)
+        i._simplify()
+        return i
+
+    @classmethod
+    def from_factorised_ints(cls, num, denom):
+        i = rat()
+        i._numerator = num
+        i._denominator = denom
         i._simplify()
         return i
 
@@ -452,14 +468,12 @@ class rat(object):
         if not isinstance(other, rat):
             # assume it is an integer (FactorisedInt will print a warning if it's a float.)
             new_numerator = self._numerator + other * self._denominator
-            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
-                                    self._denominator.factors)
+            return rat.from_factorised_ints(new_numerator, self._denominator.copy())
 
         # (denominators are always +ve))
         if self._denominator.value == other._denominator.value:
             new_numerator =  self._numerator + other._numerator
-            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
-                                    self._denominator.factors)
+            return rat.from_factorised_ints(new_numerator, self._denominator.copy())
 
 
         # if not an integer, or the same denominator, then we must find the lowest common denominator:
@@ -467,7 +481,7 @@ class rat(object):
                                                                       other._denominator.factors)
 
         new_numerator = self._numerator * mul_self + other._numerator * mul_other
-        return rat.from_factors(new_numerator.value, new_numerator.factors, lcd.value, lcd.factors)
+        return rat.from_factorised_ints(new_numerator, lcd)
 
     # addition is commutative
     __radd__ = __add__
@@ -499,14 +513,12 @@ class rat(object):
         if not isinstance(other, rat):
             # assume it is an integer (FactorisedInt will print a warning if it's a float.)
             new_numerator = other * self._denominator - self._numerator
-            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
-                                    self._denominator.factors)
+            return rat.from_factorised_ints(new_numerator, self._denominator.copy())
 
         # (denominators are always +ve))
         if self._denominator.value == other._denominator.value:
             new_numerator =  other._numerator - self._numerator
-            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
-                                    self._denominator.factors)
+            return rat.from_factorised_ints(new_numerator, self._denominator.copy())
 
 
         # if not an integer, or the same denominator, then we must find the lowest common denominator:
@@ -514,28 +526,26 @@ class rat(object):
                                                                       other._denominator.factors)
 
         new_numerator = self._numerator * mul_self - other._numerator * mul_other
-        return rat.from_factors(new_numerator.value, new_numerator.factors, lcd.value, lcd.factors)
+        return rat.from_factorised_ints(new_numerator, lcd)
 
     def __rsub__(self, other):
         if not isinstance(other, rat):
             # assume it is an integer (FactorisedInt will print a warning if it's a float.)
             new_numerator = other * self._denominator - self._numerator
-            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
-                                    self._denominator.factors)
+            return rat.from_factorised_ints(new_numerator, self._denominator.copy())
 
         # (denominators are always +ve))
         if self._denominator.value == other._denominator.value:
             new_numerator =  other._numerator - self._numerator
-            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
-                                    self._denominator.factors)
+            return rat.from_factorised_ints(new_numerator, self._denominator.copy())
 
 
         # if not an integer, or the same denominator, then we must find the lowest common denominator:
         lcd, mul_self, mul_other = rat.find_lowest_common_denominator(self._denominator.factors,
                                                                       other._denominator.factors)
 
-        new_numerator =  other._numerator * mul_other - self._numerator * mul_self
-        return rat.from_factors(new_numerator.value, new_numerator.factors, lcd.value, lcd.factors)
+        new_numerator = other._numerator * mul_other - self._numerator * mul_self
+        return rat.from_factorised_ints(new_numerator, lcd)
 
     def __isub__(self, other):
         if not isinstance(other, rat):
@@ -563,3 +573,64 @@ class rat(object):
         self._denominator = lcd
         self._simplify()
         return self
+
+    def __mul__(self, other):
+        if isinstance(other, rat):
+            new_num = self._numerator * other._numerator
+            new_denom = self._denominator * other._denominator
+            return rat.from_factorised_ints(new_num, new_denom)
+
+        # will print a warning if other is not a sensible (integer) type.
+        new_numerator = self._numerator * other
+        return rat.from_factorised_ints(new_numerator, self._denominator.copy())
+
+    # multiplication is commutative
+    __rmul__ = __mul__
+
+    def __imul__(self, other):
+        if isinstance(other, rat):
+            self._numerator *= other._numerator
+            self._denominator *= other._denominator
+        else:
+            # will print a warning if other is not a sensible (integer) type.
+            self._numerator *= other
+
+        self._simplify()
+        return self
+
+    def __div__(self, other):
+        if isinstance(other, rat):
+            new_num = self._numerator * other._denominator
+            new_denom = self._denominator * other._numerator
+            return rat.from_factorised_ints(new_num, new_denom)
+
+        # will print a warning if other is not a sensible (integer) type.
+        new_denominator = self._denominator * other
+        return rat.from_factorised_ints(self._numerator.copy(), new_denominator)
+
+    __truediv__ = __div__
+
+    def __rdiv__(self, other):
+        if isinstance(other, rat):
+            new_num = self._denominator * other._numerator
+            new_denom = self._numerator * other._denominator
+            return rat.from_factorised_ints(new_num, new_denom)
+
+        # will print a warning if other is not a sensible (integer) type.
+        new_numerator = self._denominator * other
+        return rat.from_factorised_ints(new_numerator, self._numerator.copy())
+
+    __rtruediv__ = __rdiv__
+
+    def __idiv__(self, other):
+        if isinstance(other, rat):
+            self._numerator *= other._denominator
+            self._denominator *= other._numerator
+        else:
+            # will print a warning if other is not a sensible (integer) type.
+            self._denominator *= other
+
+        self._simplify()
+        return self
+
+    __itruediv__ = __idiv__
