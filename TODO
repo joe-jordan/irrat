@@ -1,3 +1,8 @@
+BEFORE CONTINUING:
+-> Make All Types Immutable, and always return new ones.
+(we really want rat() and irrat() to work like the native types, which are all immutable "replace with a new one
+every time" objects.)
+
 1) Arithmetic functions for rationals:
 
 the following "dunder" methods must be implemented on rat and rat.FactorisedInt:
@@ -5,10 +10,10 @@ the following "dunder" methods must be implemented on rat and rat.FactorisedInt:
 all variants of all binary arithmetic operations:
 
 add[, radd, iadd]                                                        DONE
-sub
-mul
-div       - always give same in rationals.
-truediv   /
+sub                                                                      DONE
+mul                                                                      DONE
+div       - always give same in rationals.                               DONE
+truediv   /                                                              DONE
 pow       - raise an ValueError if argument is not an integer.
 
 and unary ones:
