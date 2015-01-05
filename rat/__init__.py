@@ -419,6 +419,35 @@ class rat(object):
                     del dfs[f]
                     self._denominator.value //= f**c
 
+    @classmethod
+    def find_lowest_common_denominator(cls, self_denom_factors, other_denom_factors):
+        """finds the lowest common denominator, and the numerator multipliers, for addition and subtraction.
+        returns (lcd, self_numerator_multiplier, other_numerator_multiplier).
+        """
+        common_factors = set(other_denom_factors.keys()).union(set(self_denom_factors.keys()))
+
+        # lowest common denominator
+        lcd = {}
+
+        # what to multiply the numerators by to convert the fractions to lcd. allow negatives until later.
+        mul_self = {}
+
+        for f in common_factors:
+            lcd[f] = max([self_denom_factors[f], other_denom_factors[f]])
+            mul_self[f] = other_denom_factors[f] - self_denom_factors[f]
+
+        lcd = {f:e for f,e in lcd.items() if e != 0}
+
+        mul_other = {f:abs(e) for f,e in mul_self.items() if e < 0}
+        mul_self = {f:e for f,e in mul_self.items() if e > 0}
+
+        # all that remains is to capture the values that these sets of factors represent, and build the rational.
+        lcd = rat.FactorisedInt.from_factors(lcd)
+        mul_other = rat.FactorisedInt.from_factors(mul_other)
+        mul_self = rat.FactorisedInt.from_factors(mul_self)
+
+        return (lcd, mul_self, mul_other)
+
     def __add__(self, other):
         if not isinstance(other, rat):
             # assume it is an integer (FactorisedInt will print a warning if it's a float.)
@@ -434,30 +463,8 @@ class rat(object):
 
 
         # if not an integer, or the same denominator, then we must find the lowest common denominator:
-        ofs = other._denominator.factors
-        sfs = self._denominator.factors
-
-        common_factors = set(ofs.keys()).union(set(sfs.keys()))
-
-        # lowest common denominator
-        lcd = {}
-
-        # what to multiply the numerators by to convert the fractions to lcd. allow negatives until later.
-        mul_self = {}
-
-        for f in common_factors:
-            lcd[f] = max([sfs[f], ofs[f]])
-            mul_self[f] = ofs[f] - sfs[f]
-
-        lcd = {f:e for f,e in lcd.items() if e != 0}
-
-        mul_other = {f:abs(e) for f,e in mul_self.items() if e < 0}
-        mul_self = {f:e for f,e in mul_self.items() if e > 0}
-
-        # all that remains is to capture the values that these sets of factors represent, and build the rational.
-        lcd = rat.FactorisedInt.from_factors(lcd)
-        mul_other = rat.FactorisedInt.from_factors(mul_other)
-        mul_self = rat.FactorisedInt.from_factors(mul_self)
+        lcd, mul_self, mul_other = rat.find_lowest_common_denominator(self._denominator.factors,
+                                                                      other._denominator.factors)
 
         new_numerator = self._numerator * mul_self + other._numerator * mul_other
         return rat.from_factors(new_numerator.value, new_numerator.factors, lcd.value, lcd.factors)
@@ -479,33 +486,80 @@ class rat(object):
             return self
 
         # if not an integer, or the same denominator, then we must find the lowest common denominator:
-        ofs = other._denominator.factors
-        sfs = self._denominator.factors
-
-        common_factors = set(ofs.keys()).union(set(sfs.keys()))
-
-        # lowest common denominator
-        lcd = {}
-
-        # what to multiply the numerators by to convert the fractions to lcd. allow negatives until later.
-        mul_self = {}
-
-        for f in common_factors:
-            lcd[f] = max([sfs[f], ofs[f]])
-            mul_self[f] = ofs[f] - sfs[f]
-
-        lcd = {f:e for f,e in lcd.items() if e != 0}
-
-        mul_other = {f:abs(e) for f,e in mul_self.items() if e < 0}
-        mul_self = {f:e for f,e in mul_self.items() if e > 0}
-
-        # all that remains is to capture the values that these sets of factors represent, and build the rational.
-        lcd = rat.FactorisedInt.from_factors(lcd)
-        mul_other = rat.FactorisedInt.from_factors(mul_other)
-        mul_self = rat.FactorisedInt.from_factors(mul_self)
+        lcd, mul_self, mul_other = rat.find_lowest_common_denominator(self._denominator.factors,
+                                                                      other._denominator.factors)
 
         self._numerator *= mul_self
         self._numerator += other._numerator * mul_other
+        self._denominator = lcd
+        self._simplify()
+        return self
+
+    def __sub__(self, other):
+        if not isinstance(other, rat):
+            # assume it is an integer (FactorisedInt will print a warning if it's a float.)
+            new_numerator = other * self._denominator - self._numerator
+            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
+                                    self._denominator.factors)
+
+        # (denominators are always +ve))
+        if self._denominator.value == other._denominator.value:
+            new_numerator =  other._numerator - self._numerator
+            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
+                                    self._denominator.factors)
+
+
+        # if not an integer, or the same denominator, then we must find the lowest common denominator:
+        lcd, mul_self, mul_other = rat.find_lowest_common_denominator(self._denominator.factors,
+                                                                      other._denominator.factors)
+
+        new_numerator = self._numerator * mul_self - other._numerator * mul_other
+        return rat.from_factors(new_numerator.value, new_numerator.factors, lcd.value, lcd.factors)
+
+    def __rsub__(self, other):
+        if not isinstance(other, rat):
+            # assume it is an integer (FactorisedInt will print a warning if it's a float.)
+            new_numerator = other * self._denominator - self._numerator
+            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
+                                    self._denominator.factors)
+
+        # (denominators are always +ve))
+        if self._denominator.value == other._denominator.value:
+            new_numerator =  other._numerator - self._numerator
+            return rat.from_factors(new_numerator.value, new_numerator.factors, self._denominator.value,
+                                    self._denominator.factors)
+
+
+        # if not an integer, or the same denominator, then we must find the lowest common denominator:
+        lcd, mul_self, mul_other = rat.find_lowest_common_denominator(self._denominator.factors,
+                                                                      other._denominator.factors)
+
+        new_numerator =  other._numerator * mul_other - self._numerator * mul_self
+        return rat.from_factors(new_numerator.value, new_numerator.factors, lcd.value, lcd.factors)
+
+    def __isub__(self, other):
+        if not isinstance(other, rat):
+            # assume it is an integer (FactorisedInt will print a warning if it's a float.)
+            self._numerator -= other * self._denominator
+            self._simplify()
+            return self
+
+        # (denominators are always +ve))
+        if self._denominator.value == other._denominator.value:
+            self._numerator -= other._numerator
+            self._simplify()
+            return self
+
+        # if not an integer, or the same denominator, then we must find the lowest common denominator:
+        ofs = other._denominator.factors
+        sfs = self._denominator.factors
+
+        # if not an integer, or the same denominator, then we must find the lowest common denominator:
+        lcd, mul_self, mul_other = rat.find_lowest_common_denominator(self._denominator.factors,
+                                                                      other._denominator.factors)
+
+        self._numerator *= mul_self
+        self._numerator -= other._numerator * mul_other
         self._denominator = lcd
         self._simplify()
         return self
