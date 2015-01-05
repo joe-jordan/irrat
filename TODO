@@ -1,20 +1,15 @@
 1) Arithmetic functions for rationals:
 
-the following "dunder" methods must be implemented on both rat and rat.FactorisedInt:
+the following "dunder" methods must be implemented on rat and rat.FactorisedInt:
 
 all variants of all binary arithmetic operations:
 
-add[, radd, iadd]
+add[, radd, iadd]                                                        DONE
 sub
 mul
-floordiv
-div
-truediv
-mod       - raise an ValueError if not an integer.
-divmod    /
+div       - always give same in rationals.
+truediv   /
 pow       - raise an ValueError if argument is not an integer.
-lshift
-rshift
 
 and unary ones:
 
@@ -22,7 +17,6 @@ pos
 neg
 abs
 invert    - should return the inverse of the rational, with the numerator and denominator swapped.
-round     - returns another rational to the required precision.
 floor
 ceil
 trunc
