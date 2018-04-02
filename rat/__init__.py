@@ -177,6 +177,10 @@ class rat(object):
             return self
 
         def __div__(self, other):
+            if other == 0:
+                raise ZeroDivisionError()
+            if self == 0:
+                return self
             if isinstance(other, rat.FactorisedInt):
                 these_fs = set(self.factors.keys())
                 other_fs = set(other.factors.keys())
@@ -221,6 +225,10 @@ class rat(object):
         __truediv__ = __div__
 
         def __rdiv__(self, other):
+            if other == 0:
+                raise ZeroDivisionError()
+            if self == 0:
+                return self
             if isinstance(other, rat.FactorisedInt):
                 these_fs = set(self.factors.keys())
                 other_fs = set(other.factors.keys())
@@ -264,7 +272,10 @@ class rat(object):
         __rtruediv__ = __rdiv__
 
         def __idiv__(self, other):
-
+            if other == 0:
+                raise ZeroDivisionError()
+            if self == 0:
+                return self
             if not isinstance(other, rat.FactorisedInt):
                 n = int(other)
                 if n != other:
@@ -356,6 +367,15 @@ class rat(object):
 
             return self
 
+        def __eq__(self, other):
+            if isinstance(other, rat.FactorisedInt):
+                return self.value == other.value
+
+            return self.value == other
+
+        def __ne__(self, other):
+            return not self.__eq__(other)
+
     def __init__(self, *args):
         """rat(numerator, denominator=0), where arguments should be integers for best results (will continue but
         print warnings if floats are passed, and they will be approximated.)"""
@@ -404,7 +424,7 @@ class rat(object):
 
         common_factors = set(nfs.keys()).intersection(set(dfs.keys()))
 
-        if len(common_factors) == len(nfs) and all([f in dfs and nfs[f] > dfs for f in nfs.keys()]):
+        if len(common_factors) == len(nfs) and all([f in dfs and nfs[f] >= dfs[f] for f in nfs.keys()]):
             # this number is an integer.
             self._numerator = self._numerator / self._denominator
             self._denominator = rat.FactorisedInt(1)
@@ -632,3 +652,17 @@ class rat(object):
         return self
 
     __itruediv__ = __idiv__
+
+    def __eq__(self, other):
+        if isinstance(other, rat):
+            # rational comparison (assumes that rats are pre-simplified).
+            return self._numerator == other._numerator and self._denominator == other._denominator
+        elif int(other) == other:
+            # integer comparison
+            return self._denominator == 1 and self._numerator == other
+        else:
+            # float comparison.
+            return (self._numerator.value / self._denominator.value) == other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
