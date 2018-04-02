@@ -11,7 +11,7 @@ class rat(object):
             """val can be any integer, or left out if 0 is desired."""
             if factors:
                 # always copy the dictionary into a new object.
-                self.factors = {k:v for k,v in factors.items()}
+                self.factors = {k: v for k, v in factors.items()}
             elif val:
                 self.factors = rat.FactorisedInt.factorise(abs(val))
             else:
@@ -60,7 +60,7 @@ class rat(object):
         @classmethod
         def from_factors(cls, factors):
             value = 1
-            for f,e in factors.items():
+            for f, e in factors.items():
                 value *= f**e
 
             return rat.FactorisedInt(value, factors)
@@ -83,7 +83,8 @@ class rat(object):
             else:
                 n = int(other)
                 if n != other:
-                    print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
+                    print("Warning, inexact value", n, "computed from input value", repr(other),
+                          "in rationals library.")
 
                 self.value += n
             self.factors = rat.FactorisedInt.factorise(abs(self.value))
@@ -114,7 +115,8 @@ class rat(object):
             else:
                 n = int(other)
                 if n != other:
-                    print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
+                    print("Warning, inexact value", n, "computed from input value", repr(other),
+                          "in rationals library.")
 
                 self.value -= n
             self.factors = rat.FactorisedInt.factorise(abs(self.value))
@@ -159,7 +161,8 @@ class rat(object):
             if not isinstance(other, rat.FactorisedInt):
                 n = int(other)
                 if n != other:
-                    print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
+                    print("Warning, inexact value", n, "computed from input value", repr(other),
+                          "in rationals library.")
 
                 other = rat.FactorisedInt(n)
 
@@ -172,7 +175,6 @@ class rat(object):
             self.value *= other.value
 
             return self
-
 
         def __div__(self, other):
             if isinstance(other, rat.FactorisedInt):
@@ -266,7 +268,8 @@ class rat(object):
             if not isinstance(other, rat.FactorisedInt):
                 n = int(other)
                 if n != other:
-                    print("Warning, inexact value", n, "computed from input value", repr(other), "in rationals library.")
+                    print("Warning, inexact value", n, "computed from input value", repr(other),
+                          "in rationals library.")
 
                 other = rat.FactorisedInt(n)
 
@@ -310,7 +313,8 @@ class rat(object):
             else:
                 e_as_int = int(e)
                 if e_as_int != e:
-                    print("Warning, inexact value", e_as_int, "computed from input value", repr(e), "in rationals library.")
+                    print("Warning, inexact value", e_as_int, "computed from input value", repr(e),
+                          "in rationals library.")
 
             copy.value **= e_as_int
             for f in copy.factors.keys():
@@ -343,7 +347,8 @@ class rat(object):
             else:
                 e_as_int = int(e)
                 if e_as_int != e:
-                    print("Warning, inexact value", e_as_int, "computed from input value", repr(e), "in rationals library.")
+                    print("Warning, inexact value", e_as_int, "computed from input value", repr(e),
+                          "in rationals library.")
 
             self.value **= e_as_int
             for f in self.factors.keys():
@@ -452,17 +457,17 @@ class rat(object):
             lcd[f] = max([self_denom_factors[f], other_denom_factors[f]])
             mul_self[f] = other_denom_factors[f] - self_denom_factors[f]
 
-        lcd = {f:e for f,e in lcd.items() if e != 0}
+        lcd = {f: e for f, e in lcd.items() if e != 0}
 
-        mul_other = {f:abs(e) for f,e in mul_self.items() if e < 0}
-        mul_self = {f:e for f,e in mul_self.items() if e > 0}
+        mul_other = {f: abs(e) for f, e in mul_self.items() if e < 0}
+        mul_self = {f: e for f, e in mul_self.items() if e > 0}
 
         # all that remains is to capture the values that these sets of factors represent, and build the rational.
         lcd = rat.FactorisedInt.from_factors(lcd)
         mul_other = rat.FactorisedInt.from_factors(mul_other)
         mul_self = rat.FactorisedInt.from_factors(mul_self)
 
-        return (lcd, mul_self, mul_other)
+        return lcd, mul_self, mul_other
 
     def __add__(self, other):
         if not isinstance(other, rat):
@@ -472,9 +477,8 @@ class rat(object):
 
         # (denominators are always +ve))
         if self._denominator.value == other._denominator.value:
-            new_numerator =  self._numerator + other._numerator
+            new_numerator = self._numerator + other._numerator
             return rat.from_factorised_ints(new_numerator, self._denominator.copy())
-
 
         # if not an integer, or the same denominator, then we must find the lowest common denominator:
         lcd, mul_self, mul_other = rat.find_lowest_common_denominator(self._denominator.factors,
@@ -517,9 +521,8 @@ class rat(object):
 
         # (denominators are always +ve))
         if self._denominator.value == other._denominator.value:
-            new_numerator =  other._numerator - self._numerator
+            new_numerator = other._numerator - self._numerator
             return rat.from_factorised_ints(new_numerator, self._denominator.copy())
-
 
         # if not an integer, or the same denominator, then we must find the lowest common denominator:
         lcd, mul_self, mul_other = rat.find_lowest_common_denominator(self._denominator.factors,
@@ -536,9 +539,8 @@ class rat(object):
 
         # (denominators are always +ve))
         if self._denominator.value == other._denominator.value:
-            new_numerator =  other._numerator - self._numerator
+            new_numerator = other._numerator - self._numerator
             return rat.from_factorised_ints(new_numerator, self._denominator.copy())
-
 
         # if not an integer, or the same denominator, then we must find the lowest common denominator:
         lcd, mul_self, mul_other = rat.find_lowest_common_denominator(self._denominator.factors,
@@ -559,10 +561,6 @@ class rat(object):
             self._numerator -= other._numerator
             self._simplify()
             return self
-
-        # if not an integer, or the same denominator, then we must find the lowest common denominator:
-        ofs = other._denominator.factors
-        sfs = self._denominator.factors
 
         # if not an integer, or the same denominator, then we must find the lowest common denominator:
         lcd, mul_self, mul_other = rat.find_lowest_common_denominator(self._denominator.factors,
