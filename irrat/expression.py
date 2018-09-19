@@ -14,6 +14,7 @@ class Division(Expression):
             denominator *= -1
             numerator *= -1
         self.values = (numerator, denominator)
+        self._fully_simplified = False
         self._quick_simplify()
 
     def evaluate(self, target_type=float, precision_sf=3):
@@ -27,6 +28,8 @@ class Division(Expression):
             raise NotImplementedError()
 
     def _quick_simplify(self):
+        if self._fully_simplified:
+            return
         a, b = self.values
         # already an integer:
         if abs(a) == 1 or b == 1:
@@ -46,6 +49,8 @@ class Division(Expression):
         self.values = (a, b)
 
     def fully_simplify(self):
+        if self._fully_simplified:
+            return
         self._quick_simplify()
         a, b = self.values
         if abs(a) == 1 or b == 1:
@@ -65,6 +70,7 @@ class Division(Expression):
             b //= common_factor
 
         self.values = (a, b)
+        self._fully_simplified = True
 
     @property
     def numerator(self):
