@@ -18,7 +18,6 @@ class Division(Expression):
         self._quick_simplify()
 
     def evaluate(self, target_type=float, precision_sf=3):
-
         if target_type is float:
             a, b = self.values
             return a / b
