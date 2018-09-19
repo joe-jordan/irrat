@@ -3,22 +3,32 @@ import math
 from collections import defaultdict
 
 
+def _to_sieve_index(i):
+    """3 => 0
+    5 => 1
+    7 => 2
+    9 => 3"""
+    return (i - 3) // 2
+
+
 def prime_generator(limit):
     limit = int(math.ceil(limit))
     n = 2
     if n < limit:
         yield n
-    is_prime = {i: True for i in range(3, limit, 2)}
+    # use a list, not a dict (saves a lot of memory).
+    is_prime = [True for _ in range(_to_sieve_index(limit) + 1)]
     n = 3
     while n < limit:
         try:
-            if not is_prime[n]:
+            if not is_prime[_to_sieve_index(n)]:
                 continue
             yield n
-            m = n * 2
+            # only look at odd multiples - even ones yield a spurious sieve index.
+            m = n * 3
             while m < limit:
-                is_prime[m] = False
-                m += n
+                is_prime[_to_sieve_index(m)] = False
+                m += n * 2
         finally:
             n += 2
 

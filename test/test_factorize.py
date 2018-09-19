@@ -17,7 +17,7 @@ def _is_prime(n):
     return True
 
 
-class PrimeTests(unittest.TestCase):
+class PrimeGeneratorTests(unittest.TestCase):
     # set this higher if you want to burn some cycles.
     LARGE_LIMIT = 10000
 
