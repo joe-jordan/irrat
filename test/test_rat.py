@@ -1,3 +1,4 @@
+from __future__ import division
 import unittest
 from irrat.rat import rat
 
@@ -89,3 +90,110 @@ class RatArithmeticTests(unittest.TestCase):
         self.assertEqual(five.expression.numerator, -3)
         self.assertEqual(five.expression.denominator, 1)
 
+    def test_multiplication_of_integers(self):
+        five = rat(5)
+        ten = five * rat(2)
+        self.assertEqual(ten.expression.numerator, 10)
+        self.assertEqual(ten.expression.denominator, 1)
+
+        ten = five * 2
+        self.assertEqual(ten.expression.numerator, 10)
+        self.assertEqual(ten.expression.denominator, 1)
+
+        ten = rat(2) * five
+        self.assertEqual(ten.expression.numerator, 10)
+        self.assertEqual(ten.expression.denominator, 1)
+
+        ten = 2 * five
+        self.assertEqual(ten.expression.numerator, 10)
+        self.assertEqual(ten.expression.denominator, 1)
+
+    def test_multiplication_of_fractions(self):
+        seven_thirds = rat(7, 3)
+        one = seven_thirds * rat(3, 7)
+        self.assertEqual(one.expression.numerator, 1)
+        self.assertEqual(one.expression.denominator, 1)
+
+        seven = seven_thirds * rat(3)
+        self.assertEqual(seven.expression.numerator, 7)
+        self.assertEqual(seven.expression.denominator, 1)
+
+        eleven_thirds = seven_thirds * rat(11, 7)
+        self.assertEqual(eleven_thirds.expression.numerator, 11)
+        self.assertEqual(eleven_thirds.expression.denominator, 3)
+
+    def test_immutability_under_multiplication(self):
+        five = rat(5)
+        copy_of_five = five
+        five *= rat(1)
+        self.assertEqual(five.expression.numerator, copy_of_five.expression.numerator)
+        self.assertEqual(five.expression.denominator, copy_of_five.expression.denominator)
+        self.assertIsNot(five, copy_of_five)
+
+        five *= rat(-2, 7)
+        self.assertEqual(copy_of_five.expression.numerator, 5)
+        self.assertEqual(copy_of_five.expression.denominator, 1)
+
+        self.assertEqual(five.expression.numerator, -10)
+        self.assertEqual(five.expression.denominator, 7)
+
+    def test_division_of_integers(self):
+        five = rat(5)
+        ten = five / rat(2)
+        self.assertEqual(ten.expression.numerator, 5)
+        self.assertEqual(ten.expression.denominator, 2)
+
+        ten = five / 2
+        self.assertEqual(ten.expression.numerator, 5)
+        self.assertEqual(ten.expression.denominator, 2)
+
+        ten = rat(2) / five
+        self.assertEqual(ten.expression.numerator, 2)
+        self.assertEqual(ten.expression.denominator, 5)
+
+        ten = 2 / five
+        self.assertEqual(ten.expression.numerator, 2)
+        self.assertEqual(ten.expression.denominator, 5)
+
+    def test_division_of_fractions(self):
+        seven_thirds = rat(7, 3)
+        one = seven_thirds / rat(7, 3)
+        self.assertEqual(one.expression.numerator, 1)
+        self.assertEqual(one.expression.denominator, 1)
+
+        one_third = seven_thirds / rat(7)
+        self.assertEqual(one_third.expression.numerator, 1)
+        self.assertEqual(one_third.expression.denominator, 3)
+
+        forty_nine_thirty_thirds = seven_thirds / rat(11, 7)
+        self.assertEqual(forty_nine_thirty_thirds.expression.numerator, 49)
+        self.assertEqual(forty_nine_thirty_thirds.expression.denominator, 33)
+
+    def test_floor_division_of_fractions(self):
+        seven_thirds = rat(7, 3)
+        one = seven_thirds // rat(7, 3)
+        self.assertEqual(one.expression.numerator, 1)
+        self.assertEqual(one.expression.denominator, 1)
+
+        zero = seven_thirds // rat(7)
+        self.assertEqual(zero.expression.numerator, 0)
+        self.assertEqual(zero.expression.denominator, 1)
+
+        one = seven_thirds // rat(11, 7)
+        self.assertEqual(one.expression.numerator, 1)
+        self.assertEqual(one.expression.denominator, 1)
+
+    def test_immutability_under_division(self):
+        five = rat(5)
+        copy_of_five = five
+        five /= rat(1)
+        self.assertEqual(five.expression.numerator, copy_of_five.expression.numerator)
+        self.assertEqual(five.expression.denominator, copy_of_five.expression.denominator)
+        self.assertIsNot(five, copy_of_five)
+
+        five /= rat(-2, 7)
+        self.assertEqual(copy_of_five.expression.numerator, 5)
+        self.assertEqual(copy_of_five.expression.denominator, 1)
+
+        self.assertEqual(five.expression.numerator, -35)
+        self.assertEqual(five.expression.denominator, 2)

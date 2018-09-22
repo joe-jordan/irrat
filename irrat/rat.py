@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 from irrat.expression import Division
+import math
 
 
 class rat(object):
@@ -61,6 +62,13 @@ class rat(object):
         # return self.expression.evaluate(target_type=str, precision_sf=50)
         # for now, just convert to float:
         return str(self.expression.evaluate())
+
+    def __float__(self):
+        return self.expression.evaluate(float)
+
+    def __int__(self):
+        as_float = float(self)
+        return int(round(as_float))
 
     def __add__(self, other):
         if isinstance(other, int):
@@ -178,3 +186,18 @@ class rat(object):
         return self / other
 
     __itruediv__ = __idiv__
+
+    def __floordiv__(self, other):
+
+        if isinstance(other, int):
+            result = int(math.floor(float(self) / other))
+            return rat(result)
+        elif not isinstance(other, rat):
+            # do our best type conversion!
+            other = rat(other)
+
+        result = int(math.floor((self / other).expression.evaluate(float)))
+        return rat(result)
+
+
+
