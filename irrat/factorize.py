@@ -1,4 +1,4 @@
-from __future__ import division
+"""Functions for factorising integers and associated things."""
 import math
 from collections import defaultdict
 

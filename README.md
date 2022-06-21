@@ -7,7 +7,7 @@ irrat
 
 import the rationals type:
 
-    from rat import *
+    from irrat import *
 
 and then use rationals:
 

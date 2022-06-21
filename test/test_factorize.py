@@ -54,13 +54,12 @@ class FactorizeTest(unittest.TestCase):
 
     def test_some_numbers(self):
         nums = []
-        for i in range(20):
+        for _ in range(20):
             nums.append(random.randint(2, 100000))
         for n in nums:
             factors = factorize(n)
             product = 1
-            for p in factors.keys():
+            for p, c in factors.items():
                 self.assertTrue(_is_prime(p))
-                product *= (p ** factors[p])
+                product *= p**c
             self.assertEqual(product, n)
-

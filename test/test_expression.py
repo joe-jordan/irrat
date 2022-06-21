@@ -33,8 +33,10 @@ class DivisionExpressionTest(unittest.TestCase):
         expected_numerator = 5
         expected_denominator = 11
 
-        expression = Division(product(expected_numerator, *common_factors),
-                              product(expected_denominator, *common_factors))
+        expression = Division(
+            product(expected_numerator, *common_factors),
+            product(expected_denominator, *common_factors),
+        )
 
         actual_numerator, actual_denominator = expression.values
 
@@ -42,16 +44,18 @@ class DivisionExpressionTest(unittest.TestCase):
         self.assertEqual(expected_denominator, actual_denominator)
 
     def test_does_completely_factorize_even_large_primes_on_request(self):
-        # do not use more than 4 or so large primes here. The tests will take a very long time. (shouldn't use too much
-        # RAM though. If they do, that's a bug!)
-        # Note that this is particularly evil, as the product of a lot of very large primes like this is the worst-case
-        # scenario for the sieve algorithm for factorization.
+        # do not use more than 4 or so large primes here. The tests will take a very long time.
+        # (shouldn't use too much RAM though. If they do, that's a bug!)
+        # Note that this is particularly evil, as the product of a lot of very large primes like
+        # this is the worst-case scenario for the sieve algorithm for factorization.
         common_factors = _FIRST_HUNDRED_PRIMES[96:]
         expected_numerator = 5
         expected_denominator = 11
 
-        expression = Division(product(expected_numerator, *common_factors),
-                              product(expected_denominator, *common_factors))
+        expression = Division(
+            product(expected_numerator, *common_factors),
+            product(expected_denominator, *common_factors),
+        )
 
         # first of all, they should be unequal:
         actual_numerator, actual_denominator = expression.values

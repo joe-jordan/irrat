@@ -1,8 +1,9 @@
-from __future__ import division
+"""Types for representing expressions (of which rationals and irrationals are examples)
+For internal use by the public classes of the library."""
 from irrat.factorize import prime_generator, factorize
 
 
-class Expression(object):
+class Expression:
     def evaluate(self):
         raise NotImplementedError()
 
@@ -17,7 +18,7 @@ class Division(Expression):
         self._fully_simplified = False
         self._quick_simplify()
 
-    def evaluate(self, target_type=float, precision_sf=3):
+    def evaluate(self, target_type=float):
         if target_type is float:
             a, b = self.values
             return a / b
@@ -64,7 +65,7 @@ class Division(Expression):
         }
 
         for p, order in common_factors.items():
-            common_factor = p ** order
+            common_factor = p**order
             a //= common_factor
             b //= common_factor
 
