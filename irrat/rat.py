@@ -3,6 +3,17 @@ from irrat.expression import Division
 import math
 
 
+def _error(x):
+    """compute an appropriate margin of error for fast comparisons. Note: this is technically
+    larger than the %error from floating point numbers, but we're being conservative."""
+    if isinstance(x, int):
+        return 0
+
+    if isinstance(x, float):
+        _, exponent = math.frexp(x)
+        return 2 ** (exponent + 1)
+
+
 class rat:
     """A type, like int(), float() and complex(), to represent rational numbers (fractions of ints)
     exactly."""
@@ -59,7 +70,7 @@ class rat:
 
     def __repr__(self):
         self.expression.fully_simplify()
-        return f"rat({self.expression.numerator.value}, {self.expression.denominator.value})"
+        return f"rat({self.expression.numerator}, {self.expression.denominator})"
 
     def __str__(self):
         # when we have implemented this:
@@ -73,6 +84,11 @@ class rat:
     def __int__(self):
         as_float = float(self)
         return int(round(as_float))
+
+    def __abs__(self):
+        if self.expression.numerator < 0:
+            return rat(-self.expression.numerator, self.expression.denominator)
+        return self
 
     def __add__(self, other):
         if isinstance(other, int):
@@ -147,6 +163,9 @@ class rat:
         # one in -= cases:
         return self - other
 
+    def __neg__(self):
+        return rat(-self.expression.numerator, self.expression.denominator)
+
     def __mul__(self, other):
         if isinstance(other, int):
             new_numerator = self.expression.numerator * other
@@ -217,3 +236,90 @@ class rat:
 
         result = int(math.floor((self / other).expression.evaluate(float)))
         return rat(result)
+
+    def __eq__(self, other):
+        if isinstance(other, int):
+            if self.expression.denominator == 1:
+                return self.expression.numerator == other
+            return False
+
+        if not isinstance(other, rat):
+            # do our best type conversion!
+            other = rat(other)
+
+        self.expression.fully_simplify()
+        other.expression.fully_simplify()
+
+        return (
+            self.expression.numerator == other.expression.numerator
+            and self.expression.denominator == other.expression.denominator
+        )
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __le__(self, other):
+
+        if isinstance(other, (int, float)):
+            # Attempt a quick order of magnitude comparison.
+            approx = self.expression.approximation
+            margin_of_error = _error(other)
+            if approx - margin_of_error > other:
+                return False
+            if approx + margin_of_error < other:
+                return True
+
+        if isinstance(other, int):
+            other = rat(other, 1)
+
+        if not isinstance(other, rat):
+            # do our best type conversion!
+            other = rat(other)
+
+        # Values quite close, use exact computation.
+
+        other.expression.fully_simplify()
+        self.expression.fully_simplify()
+
+        # If we write each rational in terms of the common denominator, we can just compare the
+        # numerators. In fact, we don't even need to compute the denominator to do this.
+        self_numerator = self.expression.numerator * other.expression.denominator
+        other_numerator = other.expression.numerator * self.expression.denominator
+
+        return self_numerator <= other_numerator
+
+    def __ge__(self, other):
+
+        if isinstance(other, (int, float)):
+            # Attempt a quick order of magnitude comparison.
+            approx = self.expression.approximation
+            margin_of_error = _error(other)
+            if approx - margin_of_error > other:
+                return True
+            if approx + margin_of_error < other:
+                return False
+
+        # Values quite close, use exact computation.
+
+        if isinstance(other, int):
+            other = rat(other, 1)
+
+        if not isinstance(other, rat):
+            # do our best type conversion!
+            other = rat(other)
+
+        other.expression.fully_simplify()
+        self.expression.fully_simplify()
+
+        # If we write each rational in terms of the common denominator, we can just compare the
+        # numerators. In fact, we don't even need to compute the denominator to do this.
+        self_numerator = self.expression.numerator * other.expression.denominator
+        other_numerator = other.expression.numerator * self.expression.denominator
+
+        return self_numerator >= other_numerator
+
+    def __lt__(self, other):
+        return not self.__ge__(other)
+
+    def __gt__(self, other):
+        return not self.__le__(other)

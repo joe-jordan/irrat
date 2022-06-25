@@ -1,10 +1,26 @@
 """Types for representing expressions (of which rationals and irrationals are examples)
 For internal use by the public classes of the library."""
-from irrat.factorize import prime_generator, factorize
+from abc import ABC, abstractmethod
+from operator import invert
+
+from irrat.factorize import prime_generator, factorize, cautious_factorize
 
 
-class Expression:
-    def evaluate(self):
+class Expression(ABC):
+    """Expression: an Abstract Base Class representing any form of delayed computation, which can
+    be approximated and evaulated later."""
+
+    @property
+    @abstractmethod
+    def approximation(self):
+        """Returns an inexact approximation of a computation (e.g. a floating point representation)
+        Intended for > and < comparisons, but not suitable for == !="""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def evaluate(self, target_type=float, precision=50):
+        """evaluate(float) => approximation()
+        evaluate(str, N) => '(floating point or scientific form to N significant figures.)'"""
         raise NotImplementedError()
 
 
@@ -18,7 +34,7 @@ class Division(Expression):
         self._fully_simplified = False
         self._quick_simplify()
 
-    def evaluate(self, target_type=float):
+    def evaluate(self, target_type=float, precision=50):
         if target_type is float:
             a, b = self.values
             return a / b
@@ -27,11 +43,16 @@ class Division(Expression):
             # TODO string formatting to arbitrary precision.
             raise NotImplementedError()
 
-    def _quick_simplify(self):
+    @property
+    def approximation(self):
+        # Just return the float result from normal division.
+        return self.values[0] / self.values[1]
+
+    def _quick_simplify(self, prime_limit=23):
         if self._fully_simplified:
             return
         a, b = self.values
-        # already an integer:
+        # already an integer (or inverted integer):
         if abs(a) == 1 or b == 1:
             return
 
@@ -41,7 +62,7 @@ class Division(Expression):
             b = 1
         else:
             # perform a quick, lazy simplification that will work on many fractions.
-            for prime in prime_generator(23):
+            for prime in prime_generator(prime_limit):
                 while a % prime == 0 and b % prime == 0:
                     a //= prime
                     b //= prime
@@ -53,23 +74,43 @@ class Division(Expression):
             return
         self._quick_simplify()
         a, b = self.values
-        if abs(a) == 1 or b == 1:
+
+        # Lots of code here assumes +ve numbers.
+        neg = a < 0
+        a = abs(a)
+
+        if a == 1 or b == 1:
             return
 
-        a_factors = factorize(a)
-        b_factors = factorize(b)
+        # We want to avoid factorizing large numbers, as that's very intensive.
+        # We choose to factorize the smaller of the two numbers, but if it's still
+        # very large then we'll just try to find the first factor, and divide.
 
-        common_factors = {
-            p: min(a_factors[p], b_factors[p])
-            for p in set(a_factors.keys()) & set(b_factors.keys())
-        }
+        inverted = False
+        if a > b:
+            a, b = b, a
+            inverted = True
 
-        for p, order in common_factors.items():
-            common_factor = p**order
-            a //= common_factor
-            b //= common_factor
+        # a is smaller, so we try our best to factorize it:
+        if a < 10000**2:
+            a_factors = factorize(a)
+        else:
+            a_factors = cautious_factorize(a)
 
-        self.values = (a, b)
+        # TODO don't factorize b, just % each of a's factors to see if common.
+
+        common_factors = filter(lambda f: b % f == 0, a_factors.keys())
+
+        for f in common_factors:
+            while b % f == 0 and a_factors[f] > 0:
+                a //= f
+                b //= f
+                a_factors[f] -= 1
+
+        if inverted:
+            a, b = b, a
+
+        self.values = (-a, b) if neg else (a, b)
         self._fully_simplified = True
 
     @property

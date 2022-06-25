@@ -197,3 +197,11 @@ class RatArithmeticTests(unittest.TestCase):
 
         self.assertEqual(five.expression.numerator, -35)
         self.assertEqual(five.expression.denominator, 2)
+
+    def test_accuracy_after_float_conversion(self):
+        # This test was initially hilariously slow. We added the cautious factorize & prime gen
+        # and made it workable.
+        r = rat(23, 169)
+        s = str(r)
+        f = float(s)
+        self.assertLess(abs(f - r), 0.001)

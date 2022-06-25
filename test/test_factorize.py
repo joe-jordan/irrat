@@ -1,5 +1,6 @@
+from abc import abstractmethod
 import unittest
-from irrat.factorize import prime_generator, factorize
+from irrat.factorize import CautiousPrimeGenerator, prime_generator, factorize
 import random
 
 
@@ -17,30 +18,61 @@ def _is_prime(n):
     return True
 
 
-class PrimeGeneratorTests(unittest.TestCase):
+class PrimeGeneratorTests:
     # set this higher if you want to burn some cycles.
     LARGE_LIMIT = 10000
 
     def assertIsPrime(self, n):
-        self.assertTrue(_is_prime(n))
+        self.assertTrue(_is_prime(n), f"{n} is not prime.")
+
+    @abstractmethod
+    def prime_generator(self, limit):
+        """Since we have multiple prime generator implementations, we abstract which one we're
+        using here."""
+        raise NotImplementedError()
 
     def test_obvious_primes(self):
         expected_primes = [2, 3, 5, 7, 11, 13, 17, 19]
-        actual_primes = list(prime_generator(20))
+        actual_primes = list(self.prime_generator(20))
 
         self.assertEqual(expected_primes, actual_primes)
 
     def test_all_are_prime(self):
-        for p in prime_generator(self.LARGE_LIMIT):
+        for p in self.prime_generator(self.LARGE_LIMIT):
             self.assertIsPrime(p)
 
     def test_no_primes_are_missing(self):
-        actual_primes = list(prime_generator(self.LARGE_LIMIT))
+        actual_primes = list(self.prime_generator(self.LARGE_LIMIT))
         for i in range(1, self.LARGE_LIMIT):
             if _is_prime(i):
                 self.assertIn(i, actual_primes)
             else:
                 self.assertNotIn(i, actual_primes)
+
+
+class DirectPrimeGeneratorTest(PrimeGeneratorTests, unittest.TestCase):
+    def prime_generator(self, limit):
+        """Since we have multiple prime generator implementations, we abstract which one we're
+        using here."""
+        return prime_generator(limit)
+
+
+class CautiousPrimeGeneratorDirectTest(PrimeGeneratorTests, unittest.TestCase):
+    def prime_generator(self, limit):
+        gen = CautiousPrimeGenerator(limit)
+        return iter(gen)
+
+
+class CautiousPrimeGeneratorRampingUpTest(PrimeGeneratorTests, unittest.TestCase):
+    def prime_generator(self, limit):
+        tmp_limit = limit // 3
+        gen = CautiousPrimeGenerator(tmp_limit)
+        for prime in gen:
+            yield prime
+        # Raised StopIteration, now we can increase the limit:
+        gen.increase_limit(limit)
+        for higher_prime in gen:
+            yield higher_prime
 
 
 class FactorizeTest(unittest.TestCase):
@@ -63,3 +95,6 @@ class FactorizeTest(unittest.TestCase):
                 self.assertTrue(_is_prime(p))
                 product *= p**c
             self.assertEqual(product, n)
+
+
+# TODO also test cautious factorize has exactly the same behaviour.
