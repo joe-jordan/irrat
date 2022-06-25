@@ -1,6 +1,6 @@
 from abc import abstractmethod
 import unittest
-from irrat.factorize import CautiousPrimeGenerator, prime_generator, factorize
+from irrat.factorize import CautiousPrimeGenerator, cautious_factorize, prime_generator, factorize
 import random
 
 
@@ -29,6 +29,18 @@ class PrimeGeneratorTests:
     def prime_generator(self, limit):
         """Since we have multiple prime generator implementations, we abstract which one we're
         using here."""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def assertTrue(self, test, message=""):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def assertEqual(self, a, b, message=""):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def assertNotIn(self, item, collection, message=""):
         raise NotImplementedError()
 
     def test_obvious_primes(self):
@@ -75,7 +87,19 @@ class CautiousPrimeGeneratorRampingUpTest(PrimeGeneratorTests, unittest.TestCase
             yield higher_prime
 
 
-class FactorizeTest(unittest.TestCase):
+class FactorizeTest:
+    @abstractmethod
+    def factorize(self, n):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def assertTrue(self, test, message=""):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def assertEqual(self, a, b, message=""):
+        raise NotImplementedError()
+
     def test_20(self):
         expected_factors = {
             2: 2,
@@ -97,4 +121,11 @@ class FactorizeTest(unittest.TestCase):
             self.assertEqual(product, n)
 
 
-# TODO also test cautious factorize has exactly the same behaviour.
+class DirectFactorizeTests(FactorizeTest, unittest.TestCase):
+    def factorize(self, n):
+        return factorize(n)
+
+
+class CautiousFactorizeTests(FactorizeTest, unittest.TestCase):
+    def factorize(self, n):
+        return cautious_factorize(n)

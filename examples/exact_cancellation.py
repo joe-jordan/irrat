@@ -13,8 +13,8 @@ print(repr(c))
 # the repr should always be simplified (deliberately use a prime above 23, which means it won't
 # be auto-simplified.)
 
-d = rat(47*53, 3*3*23)
-e = rat(3*19, 53*73)
+d = rat(47 * 53, 3 * 3 * 23)
+e = rat(3 * 19, 53 * 73)
 f = d * e
 
 print(str(f))
