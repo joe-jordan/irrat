@@ -1,7 +1,6 @@
 """Types for representing expressions (of which rationals and irrationals are examples)
 For internal use by the public classes of the library."""
 from abc import ABC, abstractmethod
-from operator import invert
 
 from irrat.factorize import prime_generator, factorize, cautious_factorize
 
@@ -26,7 +25,7 @@ class Expression(ABC):
 
 class Division(Expression):
     def __init__(self, numerator, denominator):
-        super(Division, self).__init__()
+        super().__init__()
         if denominator < 0:
             denominator *= -1
             numerator *= -1
@@ -38,10 +37,10 @@ class Division(Expression):
         if target_type is float:
             a, b = self.values
             return a / b
-        else:
-            self.fully_simplify()
-            # TODO string formatting to arbitrary precision.
-            raise NotImplementedError()
+
+        self.fully_simplify()
+        # TODO string formatting to arbitrary precision.
+        raise NotImplementedError()
 
     @property
     def approximation(self):

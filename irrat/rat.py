@@ -1,6 +1,6 @@
 """The main rationals type (rat) implementation."""
-from irrat.expression import Division
 import math
+from irrat.expression import Division
 
 
 def _error(x):
@@ -12,6 +12,9 @@ def _error(x):
     if isinstance(x, float):
         _, exponent = math.frexp(x)
         return 2 ** (exponent + 1)
+
+    # We don't compute the %error in other types.
+    raise NotImplementedError()
 
 
 class rat:
@@ -95,7 +98,8 @@ class rat:
             # assume it is an integer (FactorisedInt will print a warning if it's a float.)
             new_numerator = self.expression.numerator + other * self.expression.denominator
             return rat(new_numerator, self.expression.denominator)
-        elif not isinstance(other, rat):
+
+        if not isinstance(other, rat):
             # do our best type conversion!
             other = rat(other)
 
